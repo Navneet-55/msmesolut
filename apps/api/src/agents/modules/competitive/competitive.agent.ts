@@ -2,6 +2,17 @@ import { BaseAgent, AgentResult } from '../base.agent';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { AIProvider } from '../../../ai/ai.provider';
 
+// Type-safe Prisma access - types will be available after `pnpm db:generate`
+type PrismaClientWithModels = PrismaService & {
+  competitor: {
+    findFirst: (args: any) => Promise<any>;
+    findMany: (args: any) => Promise<any>;
+  };
+  organization: {
+    findUnique: (args: any) => Promise<any>;
+  };
+};
+
 export class CompetitiveAgent extends BaseAgent {
   async execute(organizationId: string, input: any): Promise<AgentResult> {
     const { action, competitorId, topic } = input;
@@ -22,7 +33,8 @@ export class CompetitiveAgent extends BaseAgent {
   }
 
   private async analyzeCompetitor(organizationId: string, competitorId: string): Promise<AgentResult> {
-    const competitor = await this.prisma.competitor.findFirst({
+    const prisma = this.prisma as PrismaClientWithModels;
+    const competitor = await prisma.competitor.findFirst({
       where: { id: competitorId, organizationId },
       include: {
         insights: { orderBy: { date: 'desc' }, take: 20 },
@@ -33,7 +45,7 @@ export class CompetitiveAgent extends BaseAgent {
       throw new Error('Competitor not found');
     }
 
-    const org = await this.prisma.organization.findUnique({
+    const org = await prisma.organization.findUnique({
       where: { id: organizationId },
     });
 
@@ -110,11 +122,12 @@ Format as JSON:
   }
 
   private async marketResearch(organizationId: string, topic: string): Promise<AgentResult> {
-    const org = await this.prisma.organization.findUnique({
+    const prisma = this.prisma as PrismaClientWithModels;
+    const org = await prisma.organization.findUnique({
       where: { id: organizationId },
     });
 
-    const competitors = await this.prisma.competitor.findMany({
+    const competitors = await prisma.competitor.findMany({
       where: { organizationId },
       take: 10,
     });
@@ -178,7 +191,8 @@ Format as JSON:
   }
 
   private async competitivePositioning(organizationId: string): Promise<AgentResult> {
-    const org = await this.prisma.organization.findUnique({
+    const prisma = this.prisma as PrismaClientWithModels;
+    const org = await prisma.organization.findUnique({
       where: { id: organizationId },
     });
 
@@ -186,7 +200,7 @@ Format as JSON:
       throw new Error(`Organization with ID ${organizationId} not found.`);
     }
 
-    const competitors = await this.prisma.competitor.findMany({
+    const competitors = await prisma.competitor.findMany({
       where: { organizationId },
       include: {
         insights: { orderBy: { date: 'desc' }, take: 5 },

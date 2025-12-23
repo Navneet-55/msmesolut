@@ -121,9 +121,41 @@ interface AgentRun {
 }
 
 interface DashboardData {
-  metrics: Record<string, number>;
-  recentActivity: unknown[];
-  insights: unknown[];
+  tickets: {
+    total: number;
+    open: number;
+    recent: Array<{
+      id: string;
+      number: string;
+      subject: string;
+      status: string;
+    }>;
+  };
+  orders: {
+    total: number;
+    totalValue: number;
+    recent: unknown[];
+  };
+  financial: {
+    revenue: number;
+    expenses: number;
+    net: number;
+  };
+  leads: {
+    total: number;
+    qualified: number;
+    recent: Array<{
+      id: string;
+      name?: string;
+      email: string;
+      company?: string;
+      score: number;
+      status: string;
+    }>;
+  };
+  agentRuns?: {
+    weeklyTotal: number;
+  };
 }
 
 export const api = {

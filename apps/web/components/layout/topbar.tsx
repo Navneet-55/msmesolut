@@ -1,16 +1,20 @@
 'use client';
 
 import { useState } from 'react';
-import { Bell, Search, User, LogOut, Command } from 'lucide-react';
+import { Search, User, LogOut, Settings } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from '@/components/ui/toast';
 import { useGlobalShortcuts } from '@/hooks/use-keyboard-shortcuts';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { NotificationCenter } from '@/components/ui/notification-center';
+import { HelpModal } from '@/components/ui/help-modal';
 
 export function TopBar() {
   const router = useRouter();
   const toast = useToast();
   const [searchQuery, setSearchQuery] = useState('');
+  const [showUserMenu, setShowUserMenu] = useState(false);
 
   useGlobalShortcuts();
 
@@ -23,7 +27,6 @@ export function TopBar() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      // TODO: Implement search functionality
       toast.info(`Searching for "${searchQuery}"...`);
     }
   };
@@ -52,22 +55,62 @@ export function TopBar() {
           </div>
         </form>
 
-        <div className="flex items-center gap-4">
-          <button className="p-2 rounded-xl glass-light hover:bg-white/10 transition-all relative">
-            <Bell className="w-5 h-5" />
-            <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
-          </button>
+        <div className="flex items-center gap-2">
+          <HelpModal />
+          <ThemeToggle />
+          <NotificationCenter />
 
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-              <User className="w-4 h-4 text-white" />
-            </div>
+          <div className="relative ml-2">
             <button
-              onClick={handleLogout}
-              className="p-2 rounded-xl glass-light hover:bg-white/10 transition-all"
+              onClick={() => setShowUserMenu(!showUserMenu)}
+              className="flex items-center gap-2 p-1.5 rounded-xl glass-light hover:bg-white/10 transition-all"
             >
-              <LogOut className="w-5 h-5" />
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+                <User className="w-4 h-4 text-white" />
+              </div>
             </button>
+
+            <AnimatePresence>
+              {showUserMenu && (
+                <>
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setShowUserMenu(false)}
+                  />
+                  <motion.div
+                    initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                    className="absolute right-0 top-full mt-2 z-50 glass-card p-2 min-w-[180px]"
+                  >
+                    <div className="px-3 py-2 border-b border-white/10 mb-2">
+                      <p className="font-medium text-sm">Demo User</p>
+                      <p className="text-xs text-muted-foreground">demo@lumina.ai</p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setShowUserMenu(false);
+                        router.push('/settings');
+                      }}
+                      className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/10 transition-colors text-sm"
+                    >
+                      <Settings className="w-4 h-4" />
+                      Settings
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowUserMenu(false);
+                        handleLogout();
+                      }}
+                      className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/10 transition-colors text-sm text-red-500"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Logout
+                    </button>
+                  </motion.div>
+                </>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       </div>

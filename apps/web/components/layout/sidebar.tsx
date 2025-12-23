@@ -17,6 +17,9 @@ import {
   Sparkles,
   Menu,
   X,
+  BarChart3,
+  Activity,
+  Settings,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -29,6 +32,13 @@ const agents = [
   { id: 'competitive', name: 'Competitive Analysis', icon: TrendingUp, path: '/dashboard/agents/competitive' },
   { id: 'data_integration', name: 'Data Integration', icon: Database, path: '/dashboard/agents/data_integration' },
   { id: 'sales_lead', name: 'Sales Lead', icon: UserCheck, path: '/dashboard/agents/sales_lead' },
+];
+
+const mainNav = [
+  { id: 'dashboard', name: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
+  { id: 'analytics', name: 'Analytics', icon: BarChart3, path: '/dashboard/analytics' },
+  { id: 'activity', name: 'Activity Log', icon: Activity, path: '/dashboard/activity' },
+  { id: 'settings', name: 'Settings', icon: Settings, path: '/dashboard/settings' },
 ];
 
 export function Sidebar() {
@@ -65,20 +75,27 @@ export function Sidebar() {
             )}
           </div>
 
-          <nav className="flex-1 space-y-2">
-            <Link
-              href="/dashboard"
-              className={cn(
-                'flex items-center gap-3 px-4 py-3 rounded-xl transition-all',
-                pathname === '/dashboard'
-                  ? 'bg-primary/10 text-primary font-medium'
-                  : 'text-muted-foreground hover:bg-white/5 hover:text-foreground'
-              )}
-            >
-              <LayoutDashboard className="w-5 h-5" />
-              {isOpen && <span>Dashboard</span>}
-            </Link>
+          <nav className="flex-1 space-y-2 overflow-y-auto">
+            {/* Main Navigation */}
+            <div className="space-y-1">
+              {mainNav.slice(0, 1).map((item) => (
+                <Link
+                  key={item.id}
+                  href={item.path}
+                  className={cn(
+                    'flex items-center gap-3 px-4 py-3 rounded-xl transition-all',
+                    pathname === item.path
+                      ? 'bg-primary/10 text-primary font-medium'
+                      : 'text-muted-foreground hover:bg-white/5 hover:text-foreground'
+                  )}
+                >
+                  <item.icon className="w-5 h-5" />
+                  {isOpen && <span>{item.name}</span>}
+                </Link>
+              ))}
+            </div>
 
+            {/* AI Agents */}
             <div className="pt-4">
               <p className="px-4 text-xs font-semibold text-muted-foreground uppercase mb-2">
                 {isOpen && 'AI Agents'}
@@ -97,6 +114,30 @@ export function Sidebar() {
                   >
                     <agent.icon className="w-5 h-5" />
                     {isOpen && <span className="text-sm">{agent.name}</span>}
+                  </Link>
+                ))}
+              </div>
+            </div>
+
+            {/* Analytics & Settings */}
+            <div className="pt-4">
+              <p className="px-4 text-xs font-semibold text-muted-foreground uppercase mb-2">
+                {isOpen && 'Workspace'}
+              </p>
+              <div className="space-y-1">
+                {mainNav.slice(1).map((item) => (
+                  <Link
+                    key={item.id}
+                    href={item.path}
+                    className={cn(
+                      'flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all',
+                      pathname === item.path
+                        ? 'bg-primary/10 text-primary font-medium'
+                        : 'text-muted-foreground hover:bg-white/5 hover:text-foreground'
+                    )}
+                  >
+                    <item.icon className="w-5 h-5" />
+                    {isOpen && <span className="text-sm">{item.name}</span>}
                   </Link>
                 ))}
               </div>

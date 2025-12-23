@@ -1,29 +1,56 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, HttpStatus } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { Public } from '../common/decorators/public.decorator';
+import { ConfigService } from '@nestjs/config';
 
 @Controller('health')
 export class HealthController {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private configService: ConfigService,
+  ) {}
 
+  @Public()
   @Get()
   async check() {
+    const startTime = Date.now();
+    let dbStatus = 'connected';
+    let dbLatency = 0;
+
     try {
+      const dbStart = Date.now();
       await this.prisma.$queryRaw`SELECT 1`;
-      return {
-        status: 'ok',
-        timestamp: new Date().toISOString(),
-        database: 'connected',
-      };
+      dbLatency = Date.now() - dbStart;
     } catch (error) {
-      return {
-        status: 'error',
-        timestamp: new Date().toISOString(),
-        database: 'disconnected',
-        error: error instanceof Error ? error.message : 'Unknown error',
-      };
+      dbStatus = 'disconnected';
     }
+
+    return {
+      status: dbStatus === 'connected' ? 'healthy' : 'unhealthy',
+      timestamp: new Date().toISOString(),
+      version: '1.0.0',
+      environment: this.configService.get('NODE_ENV', 'development'),
+      uptime: process.uptime(),
+      checks: {
+        database: {
+          status: dbStatus,
+          latency: `${dbLatency}ms`,
+        },
+      },
+      responseTime: `${Date.now() - startTime}ms`,
+    };
   }
 
+  @Public()
+  @Get('live')
+  async liveness() {
+    return {
+      status: 'alive',
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  @Public()
   @Get('ready')
   async readiness() {
     try {
@@ -38,6 +65,17 @@ export class HealthController {
         timestamp: new Date().toISOString(),
       };
     }
+  }
+
+  @Public()
+  @Get('version')
+  async version() {
+    return {
+      version: '1.0.0',
+      name: 'Lumina AI',
+      description: 'Intelligent Business Operations, Illuminated',
+      environment: this.configService.get('NODE_ENV', 'development'),
+    };
   }
 }
 
