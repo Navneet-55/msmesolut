@@ -31,6 +31,21 @@ services:
       timeout: 5s
       retries: 5
 
+  python-api:
+    build:
+      context: ./packages/python
+      dockerfile: Dockerfile
+    container_name: lumina-python-api
+    environment:
+      PYTHON_API_PORT: 5000
+      ALLOWED_ORIGINS: http://localhost:3000,http://localhost:4000
+      NODE_ENV: production
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./packages/python:/app
+    command: uvicorn src.lumina.api.main:app --host 0.0.0.0 --port 5000
+
   api:
     build:
       context: .
@@ -39,6 +54,7 @@ services:
     environment:
       DATABASE_URL: postgresql://lumina:lumina123@postgres:5432/lumina_ai?schema=public
       REDIS_URL: redis://redis:6379
+      PYTHON_API_URL: http://python-api:5000
       JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
       JWT_EXPIRES_IN: 7d
       REFRESH_TOKEN_SECRET: ${REFRESH_TOKEN_SECRET:-change-me-in-production}
@@ -55,6 +71,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      python-api:
+        condition: service_started
     command: node apps/api/dist/main.js
 
   web:
@@ -74,4 +92,3 @@ services:
 volumes:
   postgres_data:
   redis_data:
-

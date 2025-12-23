@@ -18,6 +18,8 @@
     "db:studio": "pnpm --filter @lumina/prisma studio",
     "db:setup": "node scripts/db-setup.js",
     "db:reset": "pnpm --filter @lumina/prisma migrate reset && pnpm --filter @lumina/prisma seed",
+    "python:install": "cd packages/python && pip install -r requirements.txt",
+    "python:dev": "cd packages/python && uvicorn src.lumina.api.main:app --reload --port 5000",
     "lint": "pnpm --recursive lint",
     "type-check": "pnpm --recursive type-check",
     "clean": "node scripts/clean.js",

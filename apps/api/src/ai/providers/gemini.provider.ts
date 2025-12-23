@@ -118,15 +118,12 @@ export class GeminiProvider extends AIProvider {
   }
 
   async embed(options: AIEmbedOptions): Promise<AIEmbedResponse> {
-    // Gemini doesn't have a direct embedding API in the same way
-    // This is a stub that could be implemented with alternative methods
-    // For now, return a mock embedding
+    // For embeddings, we can use the Python service if available
+    // This is a stub that could be enhanced to call Python service
     const { text } = options;
-    
+
     // In production, you might use a different embedding model
-    // or use Gemini's text-embedding capabilities if available
-    throw new Error('Embedding not yet implemented for Gemini. Use a dedicated embedding service.');
+    // or delegate to Python service for better embeddings
+    throw new Error('Embedding not yet implemented for Gemini. Use Python service or dedicated embedding service.');
   }
 }
-
-

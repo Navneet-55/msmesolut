@@ -47,13 +47,17 @@ Lumina AI features a premium Liquid Glass design language inspired by Apple's ae
 - react-hook-form + zod
 
 ### Backend
-- NestJS
+- NestJS (TypeScript)
+- Python (FastAPI) - AI/ML services
 - PostgreSQL + Prisma
 - Redis/BullMQ
 - WebSockets/SSE
 
 ### AI
 - Google Gemini API (abstracted provider pattern)
+- Python ML Services (embeddings, sentiment, analysis)
+- Sentence Transformers (embeddings)
+- scikit-learn (classification)
 
 ## 🚀 Quick Start
 
@@ -120,6 +124,7 @@ make dev
 
 - Node.js 18+
 - pnpm 8+
+- Python 3.10+ (optional, for enhanced AI services)
 - PostgreSQL 14+
 - Redis 6+
 

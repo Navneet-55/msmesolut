@@ -1,0 +1,17 @@
+{
+  "name": "@lumina/python",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Lumina AI Python Services",
+  "scripts": {
+    "install": "pip install -r requirements.txt",
+    "install:dev": "pip install -r requirements.txt && pip install -e '.[dev]'",
+    "dev": "uvicorn src.lumina.api.main:app --reload --port 5000",
+    "start": "uvicorn src.lumina.api.main:app --host 0.0.0.0 --port 5000",
+    "lint": "ruff check src/",
+    "format": "black src/",
+    "type-check": "mypy src/",
+    "test": "pytest"
+  }
+}
+

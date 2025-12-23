@@ -8,6 +8,7 @@ import { DataModule } from './data/data.module';
 import { IntegrationsModule } from './integrations/integrations.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { HealthModule } from './health/health.module';
+import { PythonModule } from './python/python.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { HealthModule } from './health/health.module';
     IntegrationsModule,
     NotificationsModule,
     HealthModule,
+    PythonModule,
   ],
 })
 export class AppModule {}
