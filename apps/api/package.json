@@ -31,7 +31,9 @@
     "zod": "^3.22.4",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.1",
-    "axios": "^1.6.2"
+    "axios": "^1.6.2",
+    "uuid": "^9.0.1",
+    "@types/uuid": "^9.0.7"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.2.1",
