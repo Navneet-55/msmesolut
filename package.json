@@ -1,0 +1,30 @@
+{
+  "name": "lumina-ai",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Intelligent Business Operations, Illuminated",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "pnpm --parallel dev",
+    "build": "pnpm --recursive build",
+    "db:generate": "pnpm --filter prisma generate",
+    "db:migrate": "pnpm --filter prisma migrate",
+    "db:seed": "pnpm --filter prisma seed",
+    "db:studio": "pnpm --filter prisma studio",
+    "lint": "pnpm --recursive lint",
+    "type-check": "pnpm --recursive type-check"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  }
+}
+
+
