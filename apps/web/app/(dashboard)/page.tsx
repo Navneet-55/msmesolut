@@ -3,19 +3,52 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { motion } from 'framer-motion';
-import { Ticket, DollarSign, Users, TrendingUp, Loader2 } from 'lucide-react';
+import { Ticket, DollarSign, Users, TrendingUp, Inbox } from 'lucide-react';
+import { SkeletonStats, SkeletonList, EmptyState } from '@/components/ui';
 
 export default function DashboardPage() {
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: ['dashboard'],
     queryFn: () => api.dashboard.get(),
   });
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="space-y-6">
+        <div>
+          <div className="h-10 w-48 bg-gradient-to-r from-slate-200 to-slate-100 dark:from-slate-800 dark:to-slate-700 rounded-lg mb-2 animate-pulse" />
+          <div className="h-5 w-64 bg-gradient-to-r from-slate-200 to-slate-100 dark:from-slate-800 dark:to-slate-700 rounded-lg animate-pulse" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <SkeletonStats key={i} />
+          ))}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="glass-card p-6">
+            <div className="h-6 w-32 bg-gradient-to-r from-slate-200 to-slate-100 dark:from-slate-800 dark:to-slate-700 rounded-lg mb-4 animate-pulse" />
+            <SkeletonList count={3} />
+          </div>
+          <div className="glass-card p-6">
+            <div className="h-6 w-32 bg-gradient-to-r from-slate-200 to-slate-100 dark:from-slate-800 dark:to-slate-700 rounded-lg mb-4 animate-pulse" />
+            <SkeletonList count={3} />
+          </div>
+        </div>
       </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <EmptyState
+        icon={Inbox}
+        title="Failed to load dashboard"
+        description="We couldn't load your dashboard data. Please try refreshing the page."
+        action={{
+          label: 'Refresh',
+          onClick: () => window.location.reload(),
+        }}
+      />
     );
   }
 
@@ -83,25 +116,33 @@ export default function DashboardPage() {
           className="glass-card"
         >
           <h2 className="text-xl font-semibold mb-4">Recent Tickets</h2>
-          <div className="space-y-3">
-            {data?.tickets?.recent?.map((ticket: any) => (
-              <div key={ticket.id} className="p-3 rounded-xl glass-light">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">{ticket.subject}</p>
-                    <p className="text-sm text-muted-foreground">{ticket.number}</p>
+          {data?.tickets?.recent && data.tickets.recent.length > 0 ? (
+            <div className="space-y-3">
+              {data.tickets.recent.map((ticket: any) => (
+                <div key={ticket.id} className="p-3 rounded-xl glass-light hover:bg-white/5 transition-colors">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium">{ticket.subject}</p>
+                      <p className="text-sm text-muted-foreground">{ticket.number}</p>
+                    </div>
+                    <span className={`px-2 py-1 rounded-lg text-xs font-medium ${
+                      ticket.status === 'open' ? 'bg-blue-500/20 text-blue-600 dark:text-blue-400' :
+                      ticket.status === 'resolved' ? 'bg-green-500/20 text-green-600 dark:text-green-400' :
+                      'bg-gray-500/20 text-gray-600 dark:text-gray-400'
+                    }`}>
+                      {ticket.status}
+                    </span>
                   </div>
-                  <span className={`px-2 py-1 rounded-lg text-xs font-medium ${
-                    ticket.status === 'open' ? 'bg-blue-500/20 text-blue-600 dark:text-blue-400' :
-                    ticket.status === 'resolved' ? 'bg-green-500/20 text-green-600 dark:text-green-400' :
-                    'bg-gray-500/20 text-gray-600 dark:text-gray-400'
-                  }`}>
-                    {ticket.status}
-                  </span>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              icon={Ticket}
+              title="No tickets yet"
+              description="Tickets will appear here once they're created."
+            />
+          )}
         </motion.div>
 
         <motion.div
@@ -111,27 +152,35 @@ export default function DashboardPage() {
           className="glass-card"
         >
           <h2 className="text-xl font-semibold mb-4">Recent Leads</h2>
-          <div className="space-y-3">
-            {data?.leads?.recent?.map((lead: any) => (
-              <div key={lead.id} className="p-3 rounded-xl glass-light">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">{lead.name || lead.email}</p>
-                    <p className="text-sm text-muted-foreground">{lead.company || 'No company'}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-medium">Score: {lead.score}</p>
-                    <span className={`px-2 py-1 rounded-lg text-xs font-medium ${
-                      lead.status === 'qualified' ? 'bg-green-500/20 text-green-600 dark:text-green-400' :
-                      'bg-gray-500/20 text-gray-600 dark:text-gray-400'
-                    }`}>
-                      {lead.status}
-                    </span>
+          {data?.leads?.recent && data.leads.recent.length > 0 ? (
+            <div className="space-y-3">
+              {data.leads.recent.map((lead: any) => (
+                <div key={lead.id} className="p-3 rounded-xl glass-light hover:bg-white/5 transition-colors">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium">{lead.name || lead.email}</p>
+                      <p className="text-sm text-muted-foreground">{lead.company || 'No company'}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-medium">Score: {lead.score}</p>
+                      <span className={`px-2 py-1 rounded-lg text-xs font-medium ${
+                        lead.status === 'qualified' ? 'bg-green-500/20 text-green-600 dark:text-green-400' :
+                        'bg-gray-500/20 text-gray-600 dark:text-gray-400'
+                      }`}>
+                        {lead.status}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              icon={Users}
+              title="No leads yet"
+              description="Leads will appear here once they're created."
+            />
+          )}
         </motion.div>
       </div>
     </div>

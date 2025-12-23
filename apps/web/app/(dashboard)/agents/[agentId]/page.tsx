@@ -5,7 +5,9 @@ import { useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { motion } from 'framer-motion';
-import { Loader2, Play, Sparkles } from 'lucide-react';
+import { Loader2, Play, Sparkles, History } from 'lucide-react';
+import { useToast } from '@/components/ui/toast';
+import { EmptyState, SkeletonList } from '@/components/ui';
 
 const agentConfig: Record<string, { name: string; actions: string[] }> = {
   customer_support: {
@@ -44,29 +46,55 @@ const agentConfig: Record<string, { name: string; actions: string[] }> = {
 
 export default function AgentPage() {
   const params = useParams();
+  const toast = useToast();
   const agentId = params.agentId as string;
   const config = agentConfig[agentId] || { name: 'Agent', actions: [] };
 
   const [selectedAction, setSelectedAction] = useState(config.actions[0]);
   const [input, setInput] = useState('{}');
+  const [jsonError, setJsonError] = useState('');
 
   const runMutation = useMutation({
     mutationFn: () => {
       let parsedInput;
       try {
         parsedInput = JSON.parse(input);
-      } catch {
+      } catch (e) {
         parsedInput = { action: selectedAction };
       }
       parsedInput.action = selectedAction;
       return api.agents.run(agentId, parsedInput);
     },
+    onSuccess: () => {
+      toast.success('Agent run completed successfully!');
+      runsQuery.refetch();
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to run agent');
+    },
   });
 
-  const { data: runs } = useQuery({
+  const runsQuery = useQuery({
     queryKey: ['agent-runs', agentId],
     queryFn: () => api.agents.getRuns(agentId, 10),
   });
+
+  const { data: runs, isLoading: runsLoading } = runsQuery;
+
+  const validateJSON = (value: string) => {
+    if (!value.trim()) {
+      setJsonError('');
+      return true;
+    }
+    try {
+      JSON.parse(value);
+      setJsonError('');
+      return true;
+    } catch (e) {
+      setJsonError('Invalid JSON format');
+      return false;
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -100,19 +128,44 @@ export default function AgentPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">Input (JSON)</label>
+              <label htmlFor="agent-input" className="block text-sm font-medium mb-2">
+                Input (JSON) - Optional
+              </label>
               <textarea
+                id="agent-input"
                 value={input}
-                onChange={(e) => setInput(e.target.value)}
+                onChange={(e) => {
+                  setInput(e.target.value);
+                  validateJSON(e.target.value);
+                }}
+                onBlur={(e) => validateJSON(e.target.value)}
                 rows={8}
-                className="w-full px-4 py-3 rounded-xl glass-light border border-white/20 focus:outline-none focus:ring-2 focus:ring-primary/50 font-mono text-sm"
+                className={`w-full px-4 py-3 rounded-xl glass-light border font-mono text-sm focus:outline-none focus:ring-2 transition-all ${
+                  jsonError
+                    ? 'border-red-500/50 focus:ring-red-500/50'
+                    : 'border-white/20 focus:ring-primary/50'
+                }`}
                 placeholder='{"key": "value"}'
+                aria-invalid={!!jsonError}
+                aria-describedby={jsonError ? 'json-error' : undefined}
               />
+              {jsonError && (
+                <p id="json-error" className="mt-1 text-sm text-red-600 dark:text-red-400">
+                  {jsonError}
+                </p>
+              )}
+              <p className="mt-1 text-xs text-muted-foreground">
+                Leave empty or provide JSON input. The action will be automatically added.
+              </p>
             </div>
 
             <button
-              onClick={() => runMutation.mutate()}
-              disabled={runMutation.isPending}
+              onClick={() => {
+                if (!jsonError) {
+                  runMutation.mutate();
+                }
+              }}
+              disabled={runMutation.isPending || !!jsonError}
               className="w-full py-3 rounded-xl bg-gradient-to-r from-primary to-secondary text-white font-medium hover:shadow-lg hover:shadow-primary/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {runMutation.isPending ? (
@@ -127,12 +180,6 @@ export default function AgentPage() {
                 </>
               )}
             </button>
-
-            {runMutation.isError && (
-              <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400">
-                {(runMutation.error as Error)?.message || 'Failed to run agent'}
-              </div>
-            )}
 
             {runMutation.isSuccess && (
               <motion.div
@@ -168,26 +215,49 @@ export default function AgentPage() {
           animate={{ opacity: 1, x: 0 }}
           className="glass-card"
         >
-          <h2 className="text-xl font-semibold mb-4">Recent Runs</h2>
-          <div className="space-y-3">
-            {runs?.map((run: any) => (
-              <div key={run.id} className="p-3 rounded-xl glass-light">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium">{run.agentType}</span>
-                  <span className={`px-2 py-1 rounded-lg text-xs font-medium ${
-                    run.status === 'completed' ? 'bg-green-500/20 text-green-600 dark:text-green-400' :
-                    run.status === 'running' ? 'bg-blue-500/20 text-blue-600 dark:text-blue-400' :
-                    'bg-gray-500/20 text-gray-600 dark:text-gray-400'
-                  }`}>
-                    {run.status}
-                  </span>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  {new Date(run.createdAt).toLocaleString()}
-                </p>
-              </div>
-            ))}
+          <div className="flex items-center gap-2 mb-4">
+            <History className="w-5 h-5" />
+            <h2 className="text-xl font-semibold">Recent Runs</h2>
           </div>
+          {runsLoading ? (
+            <SkeletonList count={5} />
+          ) : runs && runs.length > 0 ? (
+            <div className="space-y-3">
+              {runs.map((run: any) => (
+                <motion.div
+                  key={run.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="p-3 rounded-xl glass-light hover:bg-white/5 transition-colors cursor-pointer"
+                  onClick={() => {
+                    // TODO: Show run details
+                    toast.info(`Run ${run.id} - ${run.status}`);
+                  }}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium">{run.agentType}</span>
+                    <span className={`px-2 py-1 rounded-lg text-xs font-medium ${
+                      run.status === 'completed' ? 'bg-green-500/20 text-green-600 dark:text-green-400' :
+                      run.status === 'running' ? 'bg-blue-500/20 text-blue-600 dark:text-blue-400' :
+                      run.status === 'failed' ? 'bg-red-500/20 text-red-600 dark:text-red-400' :
+                      'bg-gray-500/20 text-gray-600 dark:text-gray-400'
+                    }`}>
+                      {run.status}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {new Date(run.createdAt).toLocaleString()}
+                  </p>
+                </motion.div>
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              icon={History}
+              title="No runs yet"
+              description="Run the agent to see execution history here."
+            />
+          )}
         </motion.div>
       </div>
     </div>
