@@ -1,5 +1,14 @@
 # Lumina AI - Setup Guide
 
+## Windows Users
+
+**👉 See [WINDOWS.md](./WINDOWS.md) for Windows-specific instructions**
+
+For Windows, use the PowerShell scripts:
+- `.\scripts\setup.ps1` - Automated setup
+- `.\scripts\db-setup.ps1` - Database setup
+- `.\scripts\start-dev.ps1` - Start development
+
 ## Quick Start
 
 ### 1. Install Dependencies

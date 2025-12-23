@@ -10,12 +10,23 @@
   "scripts": {
     "dev": "pnpm --parallel dev",
     "build": "pnpm --recursive build",
-    "db:generate": "pnpm --filter prisma generate",
-    "db:migrate": "pnpm --filter prisma migrate",
-    "db:seed": "pnpm --filter prisma seed",
-    "db:studio": "pnpm --filter prisma studio",
+    "start": "pnpm --parallel start",
+    "setup": "node scripts/setup.js",
+    "db:generate": "pnpm --filter @lumina/prisma generate",
+    "db:migrate": "pnpm --filter @lumina/prisma migrate",
+    "db:seed": "pnpm --filter @lumina/prisma seed",
+    "db:studio": "pnpm --filter @lumina/prisma studio",
+    "db:setup": "node scripts/db-setup.js",
+    "db:reset": "pnpm --filter @lumina/prisma migrate reset && pnpm --filter @lumina/prisma seed",
     "lint": "pnpm --recursive lint",
-    "type-check": "pnpm --recursive type-check"
+    "type-check": "pnpm --recursive type-check",
+    "clean": "node scripts/clean.js",
+    "clean:all": "node scripts/clean.js && pnpm install",
+    "check-platform": "node scripts/check-platform.js",
+    "launch": "node scripts/launch.js",
+    "env:check": "node scripts/env-check.js",
+    "env:copy": "node scripts/copy-env.js",
+    "postinstall": "node scripts/postinstall.js || true"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",

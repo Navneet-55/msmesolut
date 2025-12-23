@@ -55,6 +55,65 @@ Lumina AI features a premium Liquid Glass design language inspired by Apple's ae
 ### AI
 - Google Gemini API (abstracted provider pattern)
 
+## 🚀 Quick Start
+
+### 🌍 Universal Setup (All Platforms - Recommended)
+
+**One-command setup:**
+```bash
+pnpm setup && pnpm db:setup && pnpm dev
+```
+
+**Or use the launcher:**
+```bash
+pnpm launch
+```
+
+### Platform-Specific Guides
+
+- **Windows** → [WINDOWS.md](./WINDOWS.md)
+- **macOS/Linux** → [PLATFORMS.md](./PLATFORMS.md)
+- **All Platforms** → [SETUP.md](./SETUP.md)
+
+### Quick Options
+
+**Option 1: Node.js Scripts (Universal)**
+```bash
+node scripts/setup.js
+node scripts/db-setup.js
+pnpm dev
+```
+
+**Option 2: Package Scripts (Universal)**
+```bash
+pnpm setup
+pnpm db:setup
+pnpm dev
+```
+
+**Option 3: Docker (All Platforms)**
+```bash
+docker-compose up -d
+docker-compose exec api pnpm db:migrate
+docker-compose exec api pnpm db:seed
+```
+
+**Option 4: Platform-Specific Scripts**
+
+Windows (PowerShell):
+```powershell
+.\scripts\setup.ps1
+.\scripts\db-setup.ps1
+.\scripts\start-dev.ps1
+```
+
+macOS/Linux:
+```bash
+bash scripts/setup.sh
+make db-setup
+make dev
+```
+
 ## 📦 Installation
 
 ### Prerequisites
@@ -120,9 +179,15 @@ Default demo credentials:
 
 ## 📚 Documentation
 
+- [Complete Application Guide](./APPLICATION.md) - **Start here!**
+- [Multi-Platform Support](./MULTIPLATFORM.md) - **Platform compatibility**
+- [Platform Guide](./PLATFORMS.md) - Detailed platform instructions
+- [Windows Guide](./WINDOWS.md) - Windows-specific setup
+- [Setup Guide](./SETUP.md) - General setup instructions
 - [Brand Identity](./BRAND.md)
 - [Architecture](./ARCHITECTURE.md)
 - [Folder Structure](./FOLDER_STRUCTURE.md)
+- [Code Refinements](./REFINEMENTS.md)
 
 ## 🎯 Production Deployment
 
@@ -131,12 +196,22 @@ Default demo credentials:
 3. Build the application: `pnpm build`
 4. Start production servers
 
+## 🌍 Multi-Platform Support
+
+Lumina AI is **fully multiplatform** and works on:
+- ✅ Windows (PowerShell, CMD, Git Bash, WSL2)
+- ✅ macOS (Terminal, iTerm2)
+- ✅ Linux (Ubuntu, Debian, Fedora, etc.)
+- ✅ Docker (all platforms)
+
+See [MULTIPLATFORM.md](./MULTIPLATFORM.md) for complete platform guide.
+
 ## 📄 License
 
 Proprietary - All rights reserved
 
 ---
 
-Built with precision, designed with intention.
+Built with precision, designed with intention. Works on every platform. 🌍
 
 
