@@ -7,11 +7,15 @@ import {
   Query,
   UseGuards,
   UseInterceptors,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { AgentsService } from './agents.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { TenantInterceptor } from '../common/interceptors/tenant.interceptor';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { RunAgentDto } from '../common/dto/agent.dto';
+import { User } from '../common/types/user.types';
+import { AgentType } from '../common/types/agent.types';
 
 @Controller('agents')
 @UseGuards(JwtAuthGuard)
@@ -21,8 +25,8 @@ export class AgentsController {
 
   @Post('run')
   async runAgent(
-    @Body() body: { agentType: string; input: any; entityId?: string },
-    @CurrentUser() user: any,
+    @Body() body: RunAgentDto,
+    @CurrentUser() user: User,
   ) {
     return this.agentsService.runAgent(
       user.currentOrganizationId,
@@ -36,13 +40,16 @@ export class AgentsController {
   @Get('runs')
   async getRuns(
     @Query('agentType') agentType?: string,
-    @Query('limit') limit?: string,
-    @CurrentUser() user?: any,
+    @Query('limit', new ParseIntPipe({ optional: true })) limit?: number,
+    @CurrentUser() user?: User,
   ) {
+    if (!user?.currentOrganizationId) {
+      throw new Error('User organization not found');
+    }
     return this.agentsService.getAgentRuns(
       user.currentOrganizationId,
-      agentType,
-      limit ? parseInt(limit) : 50,
+      agentType as AgentType | undefined,
+      limit || 50,
     );
   }
 

@@ -1,10 +1,11 @@
 import { PrismaService } from '../../prisma/prisma.service';
 import { AIProvider } from '../../ai/ai.provider';
+import { AgentInput } from '../../common/types/agent.types';
 
 export interface AgentResult {
-  output: any;
+  output: Record<string, unknown>;
   reasoning?: string;
-  metadata?: any;
+  metadata?: Record<string, unknown>;
 }
 
 export abstract class BaseAgent {
@@ -13,7 +14,7 @@ export abstract class BaseAgent {
     protected ai: AIProvider,
   ) {}
 
-  abstract execute(organizationId: string, input: any): Promise<AgentResult>;
+  abstract execute(organizationId: string, input: AgentInput): Promise<AgentResult>;
 }
 
 

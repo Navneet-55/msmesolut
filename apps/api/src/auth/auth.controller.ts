@@ -1,8 +1,10 @@
-import { Controller, Post, Body, Get, UseGuards, Request } from '@nestjs/common';
+import { Controller, Post, Body, Get, UseGuards, Request, HttpException, HttpStatus } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { PrismaService } from '../prisma/prisma.service';
+import { RegisterDto, LoginDto } from '../common/dto/auth.dto';
+import { User } from '../common/types/user.types';
 
 @Controller('auth')
 export class AuthController {
@@ -12,27 +14,27 @@ export class AuthController {
   ) {}
 
   @Post('register')
-  async register(@Body() body: { email: string; password: string; name?: string }) {
+  async register(@Body() body: RegisterDto) {
     return this.authService.register(body.email, body.password, body.name);
   }
 
   @UseGuards(LocalAuthGuard)
   @Post('login')
-  async login(@Request() req: any) {
+  async login(@Request() req: { user: User }) {
     // Get user's first organization (or allow selection)
     const membership = await this.prisma.orgMember.findFirst({
       where: { userId: req.user.id },
       include: { organization: true },
     });
     if (!membership) {
-      throw new Error('User has no organization');
+      throw new HttpException('User has no organization', HttpStatus.BAD_REQUEST);
     }
     return this.authService.login(req.user, membership.organizationId);
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('me')
-  async getProfile(@Request() req: any) {
+  async getProfile(@Request() req: { user: User }) {
     return {
       user: req.user,
       organization: req.user.organization,

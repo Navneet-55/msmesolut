@@ -6,15 +6,13 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
-import { PrismaService } from '../../prisma/prisma.service';
+import { User } from '../types/user.types';
 
 @Injectable()
 export class TenantInterceptor implements NestInterceptor {
-  constructor(private prisma: PrismaService) {}
-
-  async intercept(context: ExecutionContext, next: CallHandler): Promise<Observable<any>> {
+  async intercept(context: ExecutionContext, next: CallHandler): Promise<Observable<unknown>> {
     const request = context.switchToHttp().getRequest();
-    const user = request.user;
+    const user = request.user as User | undefined;
 
     if (!user?.currentOrganizationId) {
       throw new ForbiddenException('No organization context');

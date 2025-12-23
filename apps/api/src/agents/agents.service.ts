@@ -1,6 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AIProvider } from '../ai/ai.provider';
+import { BaseAgent } from './modules/base.agent';
 import { CustomerSupportAgent } from './modules/customer-support/customer-support.agent';
 import { MarketingAgent } from './modules/marketing/marketing.agent';
 import { FinancialAgent } from './modules/financial/financial.agent';
@@ -9,10 +10,13 @@ import { OnboardingAgent } from './modules/onboarding/onboarding.agent';
 import { CompetitiveAgent } from './modules/competitive/competitive.agent';
 import { DataIntegrationAgent } from './modules/data-integration/data-integration.agent';
 import { SalesLeadAgent } from './modules/sales-lead/sales-lead.agent';
+import { AgentType, AgentInput, AgentRunResult, AgentEntityLink } from '../common/types/agent.types';
+import { UnknownAgentTypeException, AgentExecutionException } from '../common/exceptions/agent.exceptions';
+import { AGENT_ENTITY_MAPPING, MAX_AGENT_RUNS_LIMIT, DEFAULT_AGENT_RUNS_LIMIT } from '../common/constants/agent.constants';
 
 @Injectable()
 export class AgentsService {
-  private agents: Map<string, any> = new Map();
+  private agents: Map<AgentType, BaseAgent> = new Map();
 
   constructor(
     private prisma: PrismaService,
@@ -31,14 +35,14 @@ export class AgentsService {
 
   async runAgent(
     organizationId: string,
-    agentType: string,
-    input: any,
+    agentType: AgentType,
+    input: AgentInput,
     userId?: string,
     entityId?: string,
-  ) {
+  ): Promise<AgentRunResult> {
     const agent = this.agents.get(agentType);
     if (!agent) {
-      throw new Error(`Unknown agent type: ${agentType}`);
+      throw new UnknownAgentTypeException(agentType);
     }
 
     // Create agent run record
@@ -70,12 +74,12 @@ export class AgentsService {
 
       // Link to entity if provided
       if (entityId) {
-        const updateData: any = {};
-        if (agentType === 'customer_support') updateData.ticketId = entityId;
-        if (agentType === 'marketing') updateData.campaignId = entityId;
-        if (agentType === 'sales_lead') updateData.leadId = entityId;
+        const entityField = AGENT_ENTITY_MAPPING[agentType];
+        if (entityField) {
+          const updateData: Partial<AgentEntityLink> = {
+            [entityField]: entityId,
+          } as Partial<AgentEntityLink>;
 
-        if (Object.keys(updateData).length > 0) {
           await this.prisma.agentRun.update({
             where: { id: agentRun.id },
             data: updateData,
@@ -87,12 +91,15 @@ export class AgentsService {
         id: agentRun.id,
         ...result,
       };
-    } catch (error: any) {
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+
       await this.prisma.agentRun.update({
         where: { id: agentRun.id },
         data: {
           status: 'failed',
-          output: { error: error.message },
+          output: { error: errorMessage },
         },
       });
 
@@ -100,23 +107,25 @@ export class AgentsService {
         data: {
           agentRunId: agentRun.id,
           level: 'error',
-          message: error.message,
-          data: { stack: error.stack },
+          message: errorMessage,
+          data: errorStack ? { stack: errorStack } : undefined,
         },
       });
 
-      throw error;
+      throw new AgentExecutionException(errorMessage, agentRun.id);
     }
   }
 
-  async getAgentRuns(organizationId: string, agentType?: string, limit = 50) {
+  async getAgentRuns(organizationId: string, agentType?: AgentType, limit = DEFAULT_AGENT_RUNS_LIMIT) {
+    const safeLimit = Math.min(Math.max(1, limit), MAX_AGENT_RUNS_LIMIT);
+    
     return this.prisma.agentRun.findMany({
       where: {
         organizationId,
         ...(agentType && { agentType }),
       },
       orderBy: { createdAt: 'desc' },
-      take: limit,
+      take: safeLimit,
       include: {
         user: {
           select: { id: true, name: true, email: true },
